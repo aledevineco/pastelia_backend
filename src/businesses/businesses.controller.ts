@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { SupabaseAuthGuard } from "src/common/guards/supabase-auth.guard";
 import { Business } from "src/entities/business.entity";
 import { Repository } from "typeorm";
 
@@ -25,5 +26,11 @@ export class BusinessesController{
     @Get(':id')
     async findOne(@Param('id') id: string) {
         return this.businessesRepository.findOneBy({ id });
+    }
+    
+    @UseGuards(SupabaseAuthGuard)
+    @Get('me/profile')
+    async getMyBusiness(@Req() req: any) {
+        return req.business; // el Guard ya dejó esto listo
     }
 }

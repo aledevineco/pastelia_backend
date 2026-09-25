@@ -9,6 +9,7 @@ import { CakeOptionsModule } from './cake-options/cake-options.module';
 import { CakeRequestsModule } from './cake-request/cake-request.module';
 import { PaymentsModule } from './payments/payments.module';
 import { OrdersModule } from './orders/orders.module';
+import { CommonModule } from './common/common.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { OrdersModule } from './orders/orders.module';
         }
       }),
     }),
+    CommonModule,
     UsersModule, 
     BusinessModule,
     CakeOptionsModule, 
