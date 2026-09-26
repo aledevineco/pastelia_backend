@@ -1,38 +1,37 @@
-import { Controller, Get, Post, Body, Param, Query, Patch } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { CakeRequest } from 'src/entities/cake-request';
-import { Repository } from 'typeorm';
+import { Controller, Get, Post, Body, Param, Query, Patch, UseGuards, Req } from '@nestjs/common';
+import { SupabaseAuthGuard } from 'src/common/guards/supabase-auth.guard';
+import { RequirePlan } from 'src/common/decorator/require-plan.decorator';
+import { PlanGuard } from 'src/common/guards/plan.guard';
+import { CakeRequestsService } from './cake-requests.service';
 
 @Controller('cake-requests')
 export class CakeRequestsController {
-  constructor(
-    @InjectRepository(CakeRequest)
-    private readonly cakeRequestsRepository: Repository<CakeRequest>,
-  ) {}
+  constructor(private readonly cakeRequestsService: CakeRequestsService) {}
 
   @Post()
-  async create(@Body() body: Partial<CakeRequest>) {
-    const request = this.cakeRequestsRepository.create(body);
-    return this.cakeRequestsRepository.save(request);
+  async create(@Body() body: any) {
+    return this.cakeRequestsService.create(body);
   }
 
+  @UseGuards(SupabaseAuthGuard)
   @Get()
-  async findByBusiness(@Query('businessId') businessId: string) {
-    return this.cakeRequestsRepository.find({ where: { businessId } });
+  async findByBusiness(@Req() req: any) {
+    const { id: businessId, plan } = req.business;
+    return this.cakeRequestsService.findByBusiness(businessId, plan);
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.cakeRequestsRepository.findOneBy({ id });
+  @UseGuards(SupabaseAuthGuard, PlanGuard)
+  @RequirePlan('pro')
+  @Get('followup')
+  async findFollowUp(@Req() req: any) {
+    return this.cakeRequestsService.findFollowUp(req.business.id);
   }
+
   @Patch(':id/price')
   async updatePrice(
     @Param('id') id: string,
     @Body() body: { finalPrice: number },
   ) {
-    await this.cakeRequestsRepository.update(id, {
-      finalPrice: body.finalPrice,
-    });
-    return this.cakeRequestsRepository.findOneBy({ id });
+    return this.cakeRequestsService.updatePrice(id, body.finalPrice);
   }
 }
